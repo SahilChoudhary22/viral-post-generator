@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="index.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@300&display=swap">
+    <script src="index.js"></script>
+
+    <title>Document</title>
+</head>
+<body>
+
+<div class="wrapper flex_box">
+
+    <form id="form_first">
+        <img src="viralPostGenerator_logo_v2.gif" style="display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 100%; margin-bottom: 50px; border-radius: 8px;"/>
+        <!-- <h2 class="title">Viral Post Generator</h2> -->
+        <div class="input">
+            <label for="task">
+                What did you do today?
+            </label>
+            <input id="task" class="name" placeholder="Eg. I walked my dog" type="text">
+        </div>
+        <div class="input">
+            <label for="motivationalQuote">
+                Inspirational Message
+            </label>
+            <input id="motivationalQuote" placeholder="Eg. Never Lose Hope" class="comment"/>
+        </div>
+        <div class="button_wrapper">
+            <button onclick="triggerPostApiCall()">
+                Generate my Post!
+            </button>
+        </div>
+
+    </form>
+
+    <form id="form_second" style="display: flex; justify-content: center; visibility: collapse;">
+            <img id="main_image_tag" src="astro_gif.gif" style="width: 400px;"
+                 alt="LinkedIn Post Generated">
+    </form>
+
+
+    <div class="cover"></div>
+</div>
+
+<script>
+
+
+    const task = document.getElementById("task");
+    const motivationalQuote = document.getElementById("motivationalQuote");
+    // const imageAdditionDiv = document.getElementById("image-res");
+    const formFirst = document.getElementById("form_first");
+    const formSecond = document.getElementById("form_second");
+    const image = document.getElementById("main_image_tag");
+
+    function triggerPostApiCall() {
+
+        const id = create_UUID()
+        const data = JSON.stringify({
+            "data": {
+                "taskId": id,
+                "theTask": task.value,
+                "theMotivation": motivationalQuote.value
+            }
+        });
+        console.log(data)
+
+        const xhr = new XMLHttpRequest();
+
+        xhr.addEventListener("readystatechange", function () {
+            if (this.readyState === 4) {
+                console.log(this.responseText);
+            }
+        });
+
+        xhr.open("POST", "https://l46zb6.deta.dev/webhook");
+        xhr.setRequestHeader("Content-Type", "application/json");
+
+        xhr.send(data);
+
+        setTimeout(pollingApiCall, 3000, id);
+
+
+    }
+
+    function pollingApiCall(id) {
+
+        formFirst.style.visibility = "hidden"
+        formSecond.style.visibility = "visible"
+
+        const xhr = new XMLHttpRequest();
+
+        xhr.addEventListener("readystatechange", function () {
+            if (this.readyState === 4) {
+                console.log(this.responseText);
+                console.log(JSON.parse(this.responseText).res);
+                const resText = JSON.parse(this.responseText);
+                if (resText.res === null) {
+                    setTimeout(pollingApiCall, 3000, id);
+                } else {
+                    if (resText.res.imgUrl != null) {
+                        addImageElement(resText.res.imgUrl);
+                    }
+                }
+                console.log(this.responseText["res"])
+            }
+        });
+
+        xhr.open("GET", "https://l46zb6.deta.dev/request?id=" + id);
+
+        xhr.send();
+
+    }
+
+    function addImageElement(imageUrl) {
+
+
+        image.src = imageUrl;
+
+        // imageAdditionDiv.appendChild(image);
+
+
+    }
+
+
+    function create_UUID() {
+        let dt = new Date().getTime();
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            const r = (dt + Math.random() * 16) % 16 | 0;
+            dt = Math.floor(dt / 16);
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+    }
+
+
+</script>
+</body>
+</html>
+
+<!-- PAYTM_STATUS_URL = https://business.paytm.com/docs/api/disburse-status-query-api/ -->
